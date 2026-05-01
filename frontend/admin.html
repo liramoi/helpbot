@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Técnico | HelpBot</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #2d3748;
+        }
+
+        header {
+            background: #2c5282;
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 { font-size: 1.2em; }
+
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+
+        .btn-dashboard {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-dashboard:hover { background: rgba(255,255,255,0.25); }
+
+        .refresh-text { font-size: 0.8em; opacity: 0.7; }
+
+        .container { max-width: 1400px; margin: 24px auto; padding: 0 20px; }
+
+        /* Filtros */
+        .filtros {
+            background: white;
+            border-radius: 10px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filtros label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filtros select, .filtros input {
+            padding: 8px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85em;
+            outline: none;
+            color: #2d3748;
+            transition: border-color 0.2s;
+        }
+
+        .filtros select:focus, .filtros input:focus {
+            border-color: #3182ce;
+        }
+
+        .btn-filtro {
+            padding: 8px 16px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-filtro:hover { background: #2c5282; }
+
+        .btn-limpar {
+            padding: 8px 16px;
+            background: #edf2f7;
+            color: #4a5568;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s;
+        }
+
+        .btn-limpar:hover { background: #e2e8f0; }
+
+        /* Stats */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 14px 18px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            flex: 1;
+            border-left: 4px solid #cbd5e0;
+        }
+
+        .stat-card h3 {
+            font-size: 0.7em;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card p { font-size: 1.5em; font-weight: 700; }
+
+        /* Tabela */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th {
+            background: #2c5282;
+            color: white;
+            padding: 14px 16px;
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: left;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.88em;
+            vertical-align: top;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover td { background: #f7fafc; }
+
+        /* Animação linha nova */
+        @keyframes rowIn {
+            from { opacity: 0; background: #ebf8ff; }
+            to { opacity: 1; background: transparent; }
+        }
+
+        .row-nova { animation: rowIn 1.2s ease; }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.72em;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-encerrado { background: #f0fff4; color: #38a169; }
+        .status-aguardando-dados { background: #fffaf0; color: #dd6b20; }
+        .status-nao-solucionado { background: #fff5f5; color: #e53e3e; }
+        .status-atendimento-inicial { background: #ebf8ff; color: #3182ce; }
+
+        .protocol-tag {
+            font-family: monospace;
+            background: #edf2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.9em;
+        }
+
+        .contact-info {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.82em;
+            font-weight: 600;
+        }
+
+        pre {
+            max-height: 100px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            border: 1px solid #e2e8f0;
+            white-space: pre-wrap;
+            font-family: inherit;
+            color: #4a5568;
+        }
+
+        /* Ações */
+        .acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .btn-acao {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.75em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .btn-acao:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-encerrar { background: #f0fff4; color: #38a169; border: 1px solid #9ae6b4; }
+        .btn-editar { background: #ebf8ff; color: #3182ce; border: 1px solid #90cdf4; }
+
+        /* Modal edição */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.ativo { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalIn 0.25s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal h3 { font-size: 1em; margin-bottom: 16px; color: #2d3748; }
+
+        .modal label {
+            display: block;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 4px;
+            margin-top: 12px;
+        }
+
+        .modal input, .modal select, .modal textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.88em;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .modal textarea { min-height: 80px; resize: vertical; }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-salvar {
+            flex: 1;
+            padding: 10px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-salvar:hover { background: #2c5282; }
+
+        .btn-cancelar {
+            padding: 10px 16px;
+            background: #edf2f7;
+            color: #4a5568;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 50px;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🛠️ Painel do Técnico — HelpBot</h1>
+    <div class="header-actions">
+        <span class="refresh-text" id="timer">Atualizando em 10s...</span>
+        <a href="dashboard.html" class="btn-dashboard">📊 Dashboard</a>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- Filtros -->
+    <div class="filtros">
+        <label>Filtrar por:</label>
+        <select id="filtro-status">
+            <option value="">Todos os status</option>
+            <option value="ATENDIMENTO INICIAL">Em Atendimento</option>
+            <option value="AGUARDANDO DADOS">Aguardando Dados</option>
+            <option value="NÃO SOLUCIONADO">Não Solucionado</option>
+            <option value="ENCERRADO">Encerrado</option>
+        </select>
+        <input type="text" id="filtro-busca" placeholder="Buscar por protocolo ou nome...">
+        <button class="btn-filtro" onclick="aplicarFiltros()">Filtrar</button>
+        <button class="btn-limpar" onclick="limparFiltros()">Limpar</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+        <div class="stat-card" style="border-left-color:#3182ce">
+            <h3>Total</h3>
+            <p id="count-total" style="color:#3182ce">0</p>
+        </div>
+        <div class="stat-card" style="border-left-color:#dd6b20">
+            <h3>Aguardando Dados</h3>
+            <p id="count-dados" style="color:#dd6b20">0</p>
+        </div>
+        <div class="stat-card" style="border-left-color:#e53e3e">
+            <h3>Não Solucionados</h3>
+            <p id="count-falhas" style="color:#e53e3e">0</p>
+        </div>
+        <div class="stat-card" style="border-left-color:#38a169">
+            <h3>Encerrados</h3>
+            <p id="count-enc" style="color:#38a169">0</p>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Protocolo</th>
+                    <th>Abertura</th>
+                    <th>Contato</th>
+                    <th>Histórico</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-corpo"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de edição -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <h3>✏️ Editar Chamado</h3>
+        <input type="hidden" id="modal-protocolo">
+        <label>Status</label>
+        <select id="modal-status">
+            <option value="ATENDIMENTO INICIAL">Em Atendimento</option>
+            <option value="AGUARDANDO DADOS">Aguardando Dados</option>
+            <option value="NÃO SOLUCIONADO">Não Solucionado</option>
+            <option value="ENCERRADO">Encerrado</option>
+        </select>
+        <label>Dados do usuário</label>
+        <input type="text" id="modal-dados" placeholder="NOME: ... | TEL: ... | EMAIL: ...">
+        <label>Adicionar observação ao histórico</label>
+        <textarea id="modal-obs" placeholder="Observação do técnico..."></textarea>
+        <div class="modal-actions">
+            <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button class="btn-salvar" onclick="salvarEdicao()">Salvar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let todosOsChamados = [];
+    let protocolosConhecidos = new Set();
+    let segundos = 10;
+
+    async function buscarChamados() {
+        try {
+            const res = await fetch('http://127.0.0.1:8001/chamados');
+            todosOsChamados = await res.json();
+            renderizar(todosOsChamados);
+        } catch (e) {
+            console.error("Erro:", e);
+        }
+    }
+
+    function renderizar(chamados) {
+        document.getElementById('count-total').innerText = chamados.length;
+        document.getElementById('count-dados').innerText = chamados.filter(c => c.status === 'AGUARDANDO DADOS').length;
+        document.getElementById('count-falhas').innerText = chamados.filter(c => c.status === 'NÃO SOLUCIONADO').length;
+        document.getElementById('count-enc').innerText = chamados.filter(c => c.status === 'ENCERRADO').length;
+
+        const tabela = document.getElementById('tabela-corpo');
+        tabela.innerHTML = '';
+
+        if (chamados.length === 0) {
+            tabela.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum chamado encontrado.</td></tr>';
+            return;
+        }
+
+        chamados.forEach(c => {
+            const isNovo = !protocolosConhecidos.has(c.protocolo);
+            if (isNovo) protocolosConhecidos.add(c.protocolo);
+
+            const statusSlug = c.status.toLowerCase().replace(/\s+/g, '-').replace(/[ãõ]/g, 'a');
+            const contatoHTML = c.dados_usuario
+                ? `<div class="contact-info">${c.dados_usuario}</div>`
+                : `<span style="color:#cbd5e0;font-style:italic">Pendente...</span>`;
+
+            const tr = document.createElement('tr');
+            if (isNovo) tr.classList.add('row-nova');
+
+            tr.innerHTML = `
+                <td><span class="protocol-tag">#${c.protocolo}</span></td>
+                <td>${c.data_criacao || '—'}</td>
+                <td>${contatoHTML}</td>
+                <td><pre>${c.historico || ''}</pre></td>
+                <td><span class="status-badge status-${statusSlug}">${c.status}</span></td>
+                <td>
+                    <div class="acoes">
+                        ${c.status !== 'ENCERRADO' ? `<button class="btn-acao btn-encerrar" onclick="encerrarChamado('${c.protocolo}')">✅ Encerrar</button>` : ''}
+                        <button class="btn-acao btn-editar" onclick="abrirModal('${c.protocolo}', '${c.status}', \`${(c.dados_usuario||'').replace(/`/g,"'")}\`)">✏️ Editar</button>
+                    </div>
+                </td>
+            `;
+            tabela.appendChild(tr);
+        });
+    }
+
+    function aplicarFiltros() {
+        const status = document.getElementById('filtro-status').value;
+        const busca = document.getElementById('filtro-busca').value.toLowerCase();
+
+        const filtrados = todosOsChamados.filter(c => {
+            const matchStatus = !status || c.status === status;
+            const matchBusca = !busca ||
+                c.protocolo.toLowerCase().includes(busca) ||
+                (c.dados_usuario || '').toLowerCase().includes(busca);
+            return matchStatus && matchBusca;
+        });
+
+        renderizar(filtrados);
+    }
+
+    function limparFiltros() {
+        document.getElementById('filtro-status').value = '';
+        document.getElementById('filtro-busca').value = '';
+        renderizar(todosOsChamados);
+    }
+
+    async function encerrarChamado(protocolo) {
+        if (!confirm(`Encerrar o chamado #${protocolo}?`)) return;
+        try {
+            await fetch(`http://127.0.0.1:8001/chamados/${protocolo}/encerrar`, { method: 'POST' });
+            buscarChamados();
+        } catch (e) {
+            alert("Erro ao encerrar chamado. Verifique se a rota existe no backend.");
+        }
+    }
+
+    function abrirModal(protocolo, status, dados) {
+        document.getElementById('modal-protocolo').value = protocolo;
+        document.getElementById('modal-status').value = status;
+        document.getElementById('modal-dados').value = dados;
+        document.getElementById('modal-obs').value = '';
+        document.getElementById('modal-overlay').classList.add('ativo');
+    }
+
+    function fecharModal() {
+        document.getElementById('modal-overlay').classList.remove('ativo');
+    }
+
+    async function salvarEdicao() {
+        const protocolo = document.getElementById('modal-protocolo').value;
+        const status = document.getElementById('modal-status').value;
+        const dados = document.getElementById('modal-dados').value;
+        const obs = document.getElementById('modal-obs').value;
+
+        try {
+            await fetch(`http://127.0.0.1:8001/chamados/${protocolo}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, dados_usuario: dados, observacao: obs })
+            });
+            fecharModal();
+            buscarChamados();
+        } catch (e) {
+            alert("Erro ao salvar. Verifique se as rotas existem no backend.");
+        }
+    }
+
+    // Auto-refresh
+    setInterval(() => {
+        segundos--;
+        document.getElementById('timer').innerText = `Atualizando em ${segundos}s...`;
+        if (segundos <= 0) {
+            segundos = 10;
+            buscarChamados();
+        }
+    }, 1000);
+
+    buscarChamados();
+</script>
+</body>
+</html>

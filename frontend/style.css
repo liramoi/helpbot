@@ -1,0 +1,30 @@
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; display: flex; height: 100vh; }
+.container { display: flex; width: 100%; }
+.sidebar { width: 250px; background: #1a202c; color: white; padding: 20px; }
+.chat-container { flex: 1; display: flex; flex-direction: column; background: white; }
+#chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.message { padding: 10px 15px; border-radius: 8px; max-width: 70%; line-height: 1.5; }
+.bot { background: #e2e8f0; align-self: flex-start; color: #2d3748; }
+.user { background: #3182ce; color: white; align-self: flex-end; }
+.input-area { padding: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; }
+input { flex: 1; padding: 10px; border: 1px solid #cbd5e0; border-radius: 5px; outline: none; }
+button { padding: 10px 20px; background: #3182ce; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.hidden { display: none; }
+.online { color: #48bb78; font-weight: bold; }
+#ticket-info { margin-top: 20px; padding: 15px; background: #2d3748; border-left: 4px solid #f6e05e; }
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    background-color: #ebf8ff;
+    color: #3182ce;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+pre {
+    max-height: 100px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    padding: 5px;
+    font-size: 0.85em;
+}

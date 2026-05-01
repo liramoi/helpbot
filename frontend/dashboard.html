@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | HelpBot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #2d3748; }
+        header { background: #2c5282; color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 1.4em; }
+        header a { color: #90cdf4; text-decoration: none; font-size: 0.85em; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+        .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #cbd5e0; }
+        .card h3 { font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; color: #718096; margin-bottom: 8px; }
+        .card p { font-size: 2em; font-weight: 700; }
+        .card.total { border-left-color: #3182ce; } .card.total p { color: #3182ce; }
+        .card.encerrado { border-left-color: #38a169; } .card.encerrado p { color: #38a169; }
+        .card.aguardando { border-left-color: #dd6b20; } .card.aguardando p { color: #dd6b20; }
+        .card.nao-solucionado { border-left-color: #e53e3e; } .card.nao-solucionado p { color: #e53e3e; }
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+        .chart-box { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .chart-box h2 { font-size: 0.95em; font-weight: 600; color: #2d3748; margin-bottom: 20px; }
+        .chart-wrap { position: relative; height: 220px; }
+        .taxa-box { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 28px; }
+        .taxa-box h2 { font-size: 0.95em; font-weight: 600; color: #2d3748; margin-bottom: 16px; }
+        .taxa-bar { background: #edf2f7; border-radius: 99px; height: 14px; overflow: hidden; margin-bottom: 8px; }
+        .taxa-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #38a169, #68d391); transition: width 1s ease; }
+        .taxa-label { display: flex; justify-content: space-between; font-size: 0.85em; color: #718096; }
+        .table-box { background: white; border-radius: 10px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .table-box h2 { font-size: 0.95em; font-weight: 600; color: #2d3748; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; color: #718096; padding: 8px 12px; border-bottom: 2px solid #edf2f7; }
+        td { padding: 12px; font-size: 0.88em; border-bottom: 1px solid #f7fafc; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f7fafc; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 600; text-transform: uppercase; }
+        .badge-encerrado { background: #f0fff4; color: #38a169; }
+        .badge-aguardando { background: #fffaf0; color: #dd6b20; }
+        .badge-nao { background: #fff5f5; color: #e53e3e; }
+        .badge-inicial { background: #ebf8ff; color: #3182ce; }
+        .protocolo { font-family: monospace; background: #edf2f7; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; }
+        .empty { text-align: center; padding: 40px; color: #a0aec0; font-size: 0.9em; }
+        .refresh-info { text-align: right; font-size: 0.8em; color: #a0aec0; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>HelpBot — Dashboard de Atendimento</h1>
+    <a href="admin.html">Ver painel completo →</a>
+</header>
+
+<div class="container">
+    <div class="refresh-info" id="refresh-info">Atualizando em 10s...</div>
+
+    <div class="cards">
+        <div class="card total"><h3>Total de Chamados</h3><p id="c-total">0</p></div>
+        <div class="card encerrado"><h3>Encerrados</h3><p id="c-encerrado">0</p></div>
+        <div class="card aguardando"><h3>Aguardando Técnico</h3><p id="c-aguardando">0</p></div>
+        <div class="card nao-solucionado"><h3>Não Solucionados</h3><p id="c-nao">0</p></div>
+    </div>
+
+    <div class="charts">
+        <div class="chart-box">
+            <h2>Chamados por Status</h2>
+            <div class="chart-wrap"><canvas id="grafico-status"></canvas></div>
+        </div>
+        <div class="chart-box">
+            <h2>Evolução de Chamados</h2>
+            <div class="chart-wrap"><canvas id="grafico-evolucao"></canvas></div>
+        </div>
+    </div>
+
+    <div class="taxa-box">
+        <h2>Taxa de Resolução pela IA</h2>
+        <div class="taxa-bar"><div class="taxa-fill" id="taxa-fill" style="width:0%"></div></div>
+        <div class="taxa-label">
+            <span>Resolvidos pela IA sem visita técnica</span>
+            <span id="taxa-label">0%</span>
+        </div>
+    </div>
+
+    <div class="table-box">
+        <h2>Últimos 10 Atendimentos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Protocolo</th>
+                    <th>Data</th>
+                    <th>Usuário</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-recente"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let graficoStatus = null;
+    let graficoEvolucao = null;
+    let contador = 10;
+
+    async function carregarDados() {
+        try {
+            const res = await fetch('http://127.0.0.1:8001/chamados');
+            const chamados = await res.json();
+            atualizar(chamados);
+        } catch (e) {
+            console.error("Erro ao carregar chamados:", e);
+        }
+    }
+
+    function atualizar(chamados) {
+        const total = chamados.length;
+        const encerrados = chamados.filter(c => c.status === 'ENCERRADO').length;
+        const aguardando = chamados.filter(c => c.status === 'AGUARDANDO DADOS').length;
+        const nao = chamados.filter(c => c.status === 'NÃO SOLUCIONADO').length;
+        const inicial = chamados.filter(c => c.status === 'ATENDIMENTO INICIAL').length;
+
+        document.getElementById('c-total').innerText = total;
+        document.getElementById('c-encerrado').innerText = encerrados;
+        document.getElementById('c-aguardando').innerText = aguardando;
+        document.getElementById('c-nao').innerText = nao;
+
+        const taxa = total > 0 ? Math.round((encerrados / total) * 100) : 0;
+        document.getElementById('taxa-fill').style.width = taxa + '%';
+        document.getElementById('taxa-label').innerText = taxa + '%';
+
+        // Gráfico de status — atualiza sem recriar
+        const statusData = [encerrados, aguardando, nao, inicial];
+        if (graficoStatus) {
+            graficoStatus.data.datasets[0].data = statusData;
+            graficoStatus.update('none');
+        } else {
+            const ctx = document.getElementById('grafico-status').getContext('2d');
+            graficoStatus = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Encerrado', 'Aguardando Dados', 'Não Solucionado', 'Em Atendimento'],
+                    datasets: [{
+                        data: statusData,
+                        backgroundColor: ['#38a169', '#dd6b20', '#e53e3e', '#3182ce'],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+                }
+            });
+        }
+
+        // Gráfico de evolução — atualiza sem recriar
+        const porData = {};
+        chamados.forEach(c => {
+            const data = c.data_criacao ? c.data_criacao.split(' ')[0] : 'Sem data';
+            porData[data] = (porData[data] || 0) + 1;
+        });
+        const datas = Object.keys(porData).sort();
+        const qtds = datas.map(d => porData[d]);
+
+        if (graficoEvolucao) {
+            graficoEvolucao.data.labels = datas.length > 0 ? datas : ['Sem dados'];
+            graficoEvolucao.data.datasets[0].data = qtds.length > 0 ? qtds : [0];
+            graficoEvolucao.update('none');
+        } else {
+            const ctx = document.getElementById('grafico-evolucao').getContext('2d');
+            graficoEvolucao = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: datas.length > 0 ? datas : ['Sem dados'],
+                    datasets: [{
+                        label: 'Chamados abertos',
+                        data: qtds.length > 0 ? qtds : [0],
+                        backgroundColor: '#3182ce',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+
+        // Tabela
+        const tbody = document.getElementById('tabela-recente');
+        const recentes = chamados.slice(0, 10);
+        if (recentes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhum chamado ainda.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = recentes.map(c => {
+            const statusClass = {
+                'ENCERRADO': 'badge-encerrado',
+                'AGUARDANDO DADOS': 'badge-aguardando',
+                'NÃO SOLUCIONADO': 'badge-nao',
+                'ATENDIMENTO INICIAL': 'badge-inicial'
+            }[c.status] || 'badge-inicial';
+
+            const usuario = c.dados_usuario
+                ? c.dados_usuario.split('|')[0].replace('NOME:', '').trim()
+                : 'Anônimo';
+
+            return `
+                <tr>
+                    <td><span class="protocolo">#${c.protocolo}</span></td>
+                    <td>${c.data_criacao || '—'}</td>
+                    <td>${usuario}</td>
+                    <td><span class="badge ${statusClass}">${c.status}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    setInterval(() => {
+        contador--;
+        document.getElementById('refresh-info').innerText = `Atualizando em ${contador}s...`;
+        if (contador <= 0) {
+            contador = 10;
+            carregarDados();
+        }
+    }, 1000);
+
+    carregarDados();
+</script>
+</body>
+</html>
