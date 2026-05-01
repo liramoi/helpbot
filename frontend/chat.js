@@ -21,7 +21,7 @@ function resetarTimerInatividade() {
             } else {
                 appendMsgAnimada("Atendimento encerrado por inatividade. Se precisar de ajuda, abra uma nova solicitação.", "bot");
                 mostrarEncerrado("ENCERRADO");
-                fetch('http://127.0.0.1:8001/chamados/verificar-inatividade', { method: 'POST' });
+                fetch('https://helpbot-vcul.onrender.com/chamados/verificar-inatividade', { method: 'POST' });
             }
         }
     }, 5 * 60 * 1000); // 5 minutos
