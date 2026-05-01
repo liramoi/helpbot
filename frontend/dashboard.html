@@ -105,7 +105,7 @@
 
     async function carregarDados() {
         try {
-            const res = await fetch('http://127.0.0.1:8001/chamados');
+            const res = await fetch('https://helpbot-vcul.onrender.com/chamados');
             const chamados = await res.json();
             atualizar(chamados);
         } catch (e) {

@@ -519,7 +519,7 @@
         const obs = document.getElementById('modal-obs').value;
 
         try {
-            await fetch(`http://127.0.0.1:8001/chamados/${protocolo}`, {
+            await fetch(`https://helpbot-vcul.onrender.com/${protocolo}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status, dados_usuario: dados, observacao: obs })
